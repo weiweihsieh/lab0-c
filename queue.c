@@ -26,7 +26,17 @@ struct list_head *q_new()
 }
 
 /* Free all storage used by queue */
-void q_free(struct list_head *l) {}
+void q_free(struct list_head *l)
+{
+    if (!l)
+        return;
+
+    element_t *node, *safe;
+    list_for_each_entry_safe (node, safe, l, list)
+        q_release_element(node);
+
+    free(l);
+}
 
 /* Attempt to insert element at head of queue.
  * Return true if successful.
@@ -101,7 +111,20 @@ bool q_insert_tail(struct list_head *head, char *s)
  */
 element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 {
-    return NULL;
+    // if queue is NULL or empty
+    if (!head || list_empty(head))
+        return NULL;
+
+    element_t *node = list_entry(head->next, element_t, list);
+    // copy the removed string to *sp
+    if (sp) {
+        strncpy(sp, node->value, bufsize - 1);
+        *(sp + bufsize - 1) = '\0';  // sp[bufsize-1] = '\0';
+    }
+
+    list_del(head->next);
+
+    return node;
 }
 
 /* Attempt to remove element from tail of queue.
@@ -109,7 +132,20 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
  */
 element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 {
-    return NULL;
+    // if queue is NULL or empty
+    if (!head || list_empty(head))
+        return NULL;
+
+    element_t *node = list_entry(head->prev, element_t, list);
+    // copy the removed string to *sp
+    if (sp) {
+        strncpy(sp, node->value, bufsize - 1);
+        *(sp + bufsize - 1) = '\0';  // sp[bufsize-1] = '\0';
+    }
+
+    list_del(head->prev);
+
+    return node;
 }
 
 /* WARN: This is for external usage, don't modify it
