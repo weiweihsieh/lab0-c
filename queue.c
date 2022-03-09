@@ -204,6 +204,19 @@ bool q_delete_dup(struct list_head *head)
 void q_swap(struct list_head *head)
 {
     // https://leetcode.com/problems/swap-nodes-in-pairs/
+
+    // if q is NULL or empty
+    if (!head || list_empty(head))
+        return;
+
+    struct list_head *node;
+    for (node = head->next; node != head && node->next != head;
+         node = node->next) {
+        struct list_head *next = node->next;
+
+        list_del(node->next);
+        list_add_tail(next, node);
+    }
 }
 
 /* Reverse elements in queue
@@ -212,10 +225,25 @@ void q_swap(struct list_head *head)
  * (e.g., by calling q_insert_head, q_insert_tail, or q_remove_head).
  * It should rearrange the existing ones.
  */
-void q_reverse(struct list_head *head) {}
+void q_reverse(struct list_head *head)
+{
+    // if q is NULL or empty
+    if (!head || list_empty(head))
+        return;
+
+    struct list_head *node, *safe;
+    list_for_each_safe (node, safe, head) {
+        list_move(node, head);
+    }
+}
 
 /* Sort elements of queue in ascending order
  * No effect if q is NULL or empty. In addition, if q has only one
  * element, do nothing.
  */
-void q_sort(struct list_head *head) {}
+void q_sort(struct list_head *head)
+{
+    // if q is NULL, empty or q has only one element
+    if (!head || list_empty(head) || list_is_singular(head))
+        return;
+}
