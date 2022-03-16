@@ -46,10 +46,17 @@ void q_free(struct list_head *l)
  */
 bool q_insert_head(struct list_head *head, char *s)
 {
-    element_t *node = malloc(sizeof(element_t));
-
     // q is NULL or could not allocate space
-    if (!head || !node)
+    // if (!head || !node)
+    //    return false;
+
+    // see make test trace-10-robust.cmd
+
+    if (!head)
+        return false;
+
+    element_t *node = malloc(sizeof(element_t));
+    if (!node)
         return false;
 
     // store string
@@ -75,10 +82,15 @@ bool q_insert_head(struct list_head *head, char *s)
  */
 bool q_insert_tail(struct list_head *head, char *s)
 {
-    element_t *node = malloc(sizeof(element_t));
-
     // q is NULL or could not allocate space
-    if (!head || !node)
+    // if (!head || !node)
+    //    return false;
+
+    if (!head)
+        return false;
+
+    element_t *node = malloc(sizeof(element_t));
+    if (!node)
         return false;
 
     // store string
@@ -165,7 +177,7 @@ int q_size(struct list_head *head)
     struct list_head *node;
     int size = 0;
 
-    if (!list_empty(head)) {
+    if (head && !list_empty(head)) {
         list_for_each (node, head)
             size++;
     }
@@ -183,6 +195,24 @@ int q_size(struct list_head *head)
 bool q_delete_mid(struct list_head *head)
 {
     // https://leetcode.com/problems/delete-the-middle-node-of-a-linked-list/
+    // if q is NULL or empty
+    if (!head || list_empty(head))
+        return false;
+
+    int pos = q_size(head) / 2;
+
+    struct list_head *node, *safe;
+    int count = 0;
+    list_for_each_safe (node, safe, head) {
+        if (count == pos) {
+            list_del(node);
+            q_release_element(list_entry(node, element_t, list));
+            break;
+        }
+
+        count++;
+    }
+
     return true;
 }
 
@@ -197,6 +227,31 @@ bool q_delete_mid(struct list_head *head)
 bool q_delete_dup(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/
+    // if q is NULL
+    if (!head)
+        return false;
+    // if q is empty or has only one node
+    if (list_empty(head) || list_is_singular(head))
+        return true;
+
+    struct list_head *node, *safe;
+    bool dup = false;
+    list_for_each_safe (node, safe, head) {
+        element_t *node_val = list_entry(node, element_t, list);
+        element_t *next_val = list_entry(node->next, element_t, list);
+
+        if (node->next != head &&
+            strcmp(node_val->value, next_val->value) == 0) {
+            list_del(node);
+            q_release_element(node_val);
+            dup = true;
+        } else if (dup) {
+            list_del(node);
+            q_release_element(node_val);
+            dup = false;
+        }
+    }
+
     return true;
 }
 
@@ -237,13 +292,14 @@ void q_reverse(struct list_head *head)
     }
 }
 
-/* Sort elements of queue in ascending order
+/*
+ * Sort elements of queue in ascending order
  * No effect if q is NULL or empty. In addition, if q has only one
  * element, do nothing.
  */
 void q_sort(struct list_head *head)
 {
-    // if q is NULL, empty or q has only one element
+    // if q is NULL, empty or has only one node
     if (!head || list_empty(head) || list_is_singular(head))
         return;
 }
