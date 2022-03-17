@@ -292,14 +292,66 @@ void q_reverse(struct list_head *head)
     }
 }
 
-/*
- * Sort elements of queue in ascending order
+/* Sort elements of queue in ascending order
  * No effect if q is NULL or empty. In addition, if q has only one
  * element, do nothing.
  */
+struct list_head *merge(struct list_head *l1, struct list_head *l2)
+{
+    if (!l2)
+        return l1;
+    if (!l1)
+        return l2;
+
+    if (strcmp(list_entry(l1, element_t, list)->value,
+               list_entry(l2, element_t, list)->value) < 0) {
+        l1->next = merge(l1->next, l2);
+        return l1;
+    } else {
+        l2->next = merge(l1, l2->next);
+        return l2;
+    }
+}
+
+struct list_head *mergeSortList(struct list_head *head)
+{
+    if (!head || !head->next)
+        return head;
+
+    struct list_head *fast = head->next;
+    struct list_head *slow = head;
+    // find middle node
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+    fast = slow->next;
+    slow->next = NULL;
+
+    struct list_head *l1 = mergeSortList(head);
+    struct list_head *l2 = mergeSortList(fast);
+
+    return merge(l1, l2);
+}
+
 void q_sort(struct list_head *head)
 {
     // if q is NULL, empty or has only one node
     if (!head || list_empty(head) || list_is_singular(head))
         return;
+
+    head->prev->next = NULL;
+
+    struct list_head *sorted_list = mergeSortList(head->next);
+
+    INIT_LIST_HEAD(head);
+    head->next = sorted_list;
+    // rebuild prev
+    struct list_head *node = head;
+    while (node->next != NULL) {
+        node->next->prev = node;
+        node = node->next;
+    }
+    head->prev = node;
+    node->next = head;
 }
