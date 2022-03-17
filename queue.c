@@ -199,19 +199,15 @@ bool q_delete_mid(struct list_head *head)
     if (!head || list_empty(head))
         return false;
 
-    int pos = q_size(head) / 2;
-
-    struct list_head *node, *safe;
-    int count = 0;
-    list_for_each_safe (node, safe, head) {
-        if (count == pos) {
-            list_del(node);
-            q_release_element(list_entry(node, element_t, list));
-            break;
-        }
-
-        count++;
+    struct list_head *slow = head->next, *fast = head->next->next;
+    // when the loop stops, pointer slow will point to the middle
+    while (fast != head && fast->next != head) {
+        slow = slow->next;
+        fast = fast->next->next;
     }
+    // delete middle node
+    list_del(slow);
+    q_release_element(list_entry(slow, element_t, list));
 
     return true;
 }
